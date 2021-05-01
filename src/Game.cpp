@@ -11,10 +11,10 @@ const sf::Time Game::g_refreshTime = sf::seconds(1.f / 60.f);
 static const auto g_videoMode = sf::VideoMode(image_width, image_height);
 static const std::string g_windowTitle = "SFML M1";
 
-static const float scale = 500;
+static const float scale = 200;
 static const int octaves = 10;
-static const float persistance = 0.5F;
-static const float lacunarity = 10.F;
+static const float persistance = 1.F;
+static const float lacunarity = 0.5F;
 
 Game::~Game()
 {
