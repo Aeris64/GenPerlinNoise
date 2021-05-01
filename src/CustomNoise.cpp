@@ -44,7 +44,7 @@ float* CustomNoise::GenerateNoise()
 		{
 			const auto sampleX = x / scale;
 
-			auto amplitude = 1.;
+			/*auto amplitude = 1.;
 			auto frequency = 1.;
 			auto noiseHeight = 0.;
 
@@ -53,7 +53,7 @@ float* CustomNoise::GenerateNoise()
 				const auto sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
 				const auto sampleY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
 				/*const auto sampleX = (x - halfWidth) / scale * frequency;
-				const auto sampleY = (y - halfHeight) / scale * frequency;*/
+				const auto sampleY = (y - halfHeight) / scale * frequency;* /
 
 				const auto perlinValue = simpleX.noise(sampleX, sampleY) * 2 - 1;
 
@@ -65,13 +65,13 @@ float* CustomNoise::GenerateNoise()
 			maxNoiseHeight = (noiseHeight > maxNoiseHeight ? noiseHeight : maxNoiseHeight);
 			minNoiseHeight = (noiseHeight < minNoiseHeight ? noiseHeight : minNoiseHeight);
 
-			*(noiseMap + y * mapWidth + x) = noiseHeight;
+			*(noiseMap + y * mapWidth + x) = noiseHeight;*/
 
-			/*const auto perlinValue = simpleX.fractal(octaves, sampleX, sampleY) * 2 - 1;
+			const auto perlinValue = simpleX.fractal(octaves, sampleX, sampleY) * 2 - 1;
 			*(noiseMap + y * mapWidth + x) = perlinValue;
 
 			maxNoiseHeight = (perlinValue > maxNoiseHeight ? perlinValue : maxNoiseHeight);
-			minNoiseHeight = (perlinValue < minNoiseHeight ? perlinValue : minNoiseHeight);*/
+			minNoiseHeight = (perlinValue < minNoiseHeight ? perlinValue : minNoiseHeight);
 		}
 	}
 

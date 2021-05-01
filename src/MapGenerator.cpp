@@ -20,41 +20,32 @@ void MapGenerator::GenerateMap()
 	auto* noiseMapFloor = noise.GenerateNoise();
 
 	noise.SetHeight(mapHeight);
-	noise.SetScale(100);
-	noise.SetOctaves(2);
+	noise.SetScale(150);
+	noise.SetOctaves(4);
 	noise.SetPersistance(1.f);
 	noise.SetLacunarity(3000.f);
 	auto* noiseMapCave = noise.GenerateNoise();
 
+	noise.SetHeight(mapHeight);
+	noise.SetScale(500);
+	noise.SetOctaves(5);
+	auto* noiseMapCloud = noise.GenerateNoise();
+
 	// Traverse the 2D array
 	for (auto x = 0; x < mapWidth; x++)
 	{
-		// std::cout << "Y:" << y << std::endl;
 		const float yCalcMax = mapHeight * (*(noiseMapFloor + 0 * mapWidth + x));
 
 		for (auto y = 0; y < mapHeight; y++)
 		{
-			// std::cout << "X:" << x << std::endl;
+			auto actualValue = (y > yCalcMax ? 0.F : 1.F);
 
-			// Print values of the
-			// memory block
-			*(noiseMapFinal + y * mapWidth + x) = (y > yCalcMax ? 0.F : 1.F);
-		}
-	}
+			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
+			if (actualValue < 0.5) actualValue = ((*(noiseMapCave + y * mapWidth + x) <= 0.4F) && (y > mapWidth * 0.50) ? 0.25F : 0.F);
+			if (actualValue > 0.5) actualValue = ((*(noiseMapCloud + y * mapWidth + x) <= 0.30F) && (y < mapWidth * 0.10) ? 0.75F : 1.F);
 
-	// Traverse the 2D array
-	for (auto y = 0; y < mapHeight; y++)
-	{
-		// std::cout << "Y:" << y << std::endl;
-
-		for (auto x = 0; x < mapWidth; x++)
-		{
-			if (*(noiseMapFinal + y * mapWidth + x) == 1) continue;
-			// std::cout << "X:" << x << std::endl;
-
-			// Print values of the
-			// memory block
-			*(noiseMapFinal + y * mapWidth + x) = (*(noiseMapCave + y * mapWidth + x) <= 0.5F ? 0.25F : 0.F);
+			// Update value of memory block
+			*(noiseMapFinal + y * mapWidth + x) = actualValue;
 		}
 	}
 
@@ -62,7 +53,7 @@ void MapGenerator::GenerateMap()
 
 	MapDisplay::DrawNoiseMap(noiseMapFinal, mapWidth, mapHeight, pixels);
 
-	// Traverse the 2D array
+	/*// Traverse the 2D array
 	for (auto y = 0; y < 3; y++)
 	{
 		// std::cout << "Y:" << y << std::endl;
@@ -76,7 +67,7 @@ void MapGenerator::GenerateMap()
 			std::cout << *(noiseMapFinal + y * mapWidth + x) << ", ";
 		}
 		std::cout << std::endl;
-	}
+	}*/
 
 	texture = new sf::Texture();
 
