@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GAME_H
+#define GAME_H
 
 #include <memory>
 #include <list>
@@ -25,3 +26,6 @@ private:
 	static const sf::Time g_refreshTime;
 	//std::list<GameObject*> m_objects;
 };
+
+
+#endif // !GAME_H

@@ -141,15 +141,17 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\MapDisplay.cpp" />
+    <ClCompile Include="src\MapGenerator.cpp" />
     <ClCompile Include="src\SimplexNoise.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Game.h" />
-    <ClInclude Include="src\MapDisplay.h" />
-    <ClInclude Include="src\MapGenerator.h" />
-    <ClInclude Include="src\CustomNoise.h" />
-    <ClInclude Include="src\SimplexNoise.h" />
-    <ClInclude Include="src\Singleton.h" />
+    <ClInclude Include="include\Game.h" />
+    <ClInclude Include="include\MapDisplay.h" />
+    <ClInclude Include="include\MapGenerator.h" />
+    <ClInclude Include="include\CustomNoise.h" />
+    <ClInclude Include="include\SimplexNoise.h" />
+    <ClInclude Include="include\Singleton.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

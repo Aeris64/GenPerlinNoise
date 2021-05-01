@@ -38,36 +38,44 @@ public:
 		const float halfWidth = mapWidth / 2;
 		const float halfHeight = mapHeight / 2;
 
+		SimplexNoise::SimplexNoise(1.F, 1.F, lacunarity, persistance);
 		SimplexNoise simpleX;
 		for (auto y = 0; y < mapHeight; y++)
 		{
 			for (auto x = 0; x < mapWidth; x++)
 			{
-				auto amplitude = 1.;
-				auto frequency = 1.;
-				auto noiseHeight = 0.;
+				const auto sampleX = x / scale;
+				const auto sampleY = y / scale;
 
-				for (auto i = 0; i < octaves; i++)
-				{
-					const auto sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
-					const auto sampleY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
-					/*const auto sampleX = (x - halfWidth) / scale * frequency;
-					const auto sampleY = (y - halfHeight) / scale * frequency;*/
+				//auto amplitude = 1.;
+				//auto frequency = 1.;
+				//auto noiseHeight = 0.;
 
-					const auto perlinValue = simpleX.noise(sampleX, sampleY) * 2 - 1;
+				//for (auto i = 0; i < octaves; i++)
+				//{
+				//	const auto sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[i].x;
+				//	const auto sampleY = (y - halfHeight) / scale * frequency + octaveOffsets[i].y;
+				//	/*const auto sampleX = (x - halfWidth) / scale * frequency;
+				//	const auto sampleY = (y - halfHeight) / scale * frequency;*/
 
-					noiseHeight += perlinValue * amplitude;
-					amplitude *= persistance;
-					frequency *= lacunarity;
-				}
+				//	const auto perlinValue = simpleX.noise(sampleX, sampleY) * 2 - 1;
 
-				maxNoiseHeight = (noiseHeight > maxNoiseHeight ? noiseHeight : maxNoiseHeight);
-				minNoiseHeight = (noiseHeight < minNoiseHeight ? noiseHeight : minNoiseHeight);
+				//	noiseHeight += perlinValue * amplitude;
+				//	amplitude *= persistance;
+				//	frequency *= lacunarity;
+				//}
 
-				*(noiseMap + y * mapWidth + x) = noiseHeight;
+				//maxNoiseHeight = (noiseHeight > maxNoiseHeight ? noiseHeight : maxNoiseHeight);
+				//minNoiseHeight = (noiseHeight < minNoiseHeight ? noiseHeight : minNoiseHeight);
 
-				// *(noiseMap + y * mapWidth + x) = perlinValue;
+				//*(noiseMap + y * mapWidth + x) = noiseHeight;
+
+				const auto perlinValue = simpleX.fractal(octaves, sampleX, sampleY) * 2 - 1;
+				*(noiseMap + y * mapWidth + x) = perlinValue;
 				// noiseMap[x, y] = perlinValue;
+
+				maxNoiseHeight = (perlinValue > maxNoiseHeight ? perlinValue : maxNoiseHeight);
+				minNoiseHeight = (perlinValue < minNoiseHeight ? perlinValue : minNoiseHeight);
 			}
 		}
 

@@ -1,6 +1,6 @@
-#include "Game.h"
-#include "MapGenerator.h"
-#include "MapDisplay.h"
+#include "../include/Game.h"
+#include "../include/MapGenerator.h"
+#include "../include/MapDisplay.h"
 
 #include <iostream>
 
@@ -13,8 +13,8 @@ static const std::string g_windowTitle = "SFML M1";
 
 static const float scale = 500;
 static const int octaves = 10;
-static const float persistance = 0.F;
-static const float lacunarity = 12.F;
+static const float persistance = 0.5F;
+static const float lacunarity = 10.F;
 
 Game::~Game()
 {

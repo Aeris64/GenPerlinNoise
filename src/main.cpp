@@ -1,6 +1,6 @@
 #include <iostream>
-#include "Game.h"
-#include "MapGenerator.h"
+#include "../include/Game.h"
+#include "../include/MapGenerator.h"
 
 int main()
 {
