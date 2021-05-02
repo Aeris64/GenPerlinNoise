@@ -15,6 +15,7 @@ MapGenerator::MapGenerator(const int mapWidth, const int mapHeight, const float 
 void MapGenerator::GenerateMap()
 {
 	auto* noiseMapFinal = new float[mapWidth * mapHeight];
+	for (auto y = 0; y < mapHeight; y++) for (auto x = 0; x < mapWidth; x++) *(noiseMapFinal + y * mapWidth + x) = -1.f;
 
 	CustomNoise noise(mapWidth, 1, noiseScale, octaves, persistance, lacunarity);	
 	auto* noiseMapFloor = noise.GenerateNoise();
@@ -30,6 +31,9 @@ void MapGenerator::GenerateMap()
 	noise.SetScale(500);
 	noise.SetOctaves(5);
 	auto* noiseMapCloud = noise.GenerateNoise();
+	const auto limitYCloud = mapHeight * 0.1F;
+	const auto spawnRateCloud = 0.3F;
+	const auto cloudValue = 0.75F;
 
 	// Traverse the 2D array
 	for (auto x = 0; x < mapWidth; x++)
@@ -40,9 +44,24 @@ void MapGenerator::GenerateMap()
 		{
 			auto actualValue = (y > yCalcMax ? 0.F : 1.F);
 
+			const auto topValue = *(noiseMapFinal + (y == 0 ? 0 : y - 1) * mapWidth + x);
+			const auto leftValue = *(noiseMapFinal + y * mapWidth + (x == 0 ? 0 : x - 1));
+
+			const auto actualCloudValue = *(noiseMapCloud + y * mapWidth + x);
+
 			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
 			if (actualValue < 0.5) actualValue = ((*(noiseMapCave + y * mapWidth + x) <= 0.4F) && (y > mapWidth * 0.50) ? 0.25F : 0.F);
-			if (actualValue > 0.5) actualValue = ((*(noiseMapCloud + y * mapWidth + x) <= 0.30F) && (y < mapWidth * 0.10) ? 0.75F : 1.F);
+			if (actualValue > 0.5 && actualCloudValue <= spawnRateCloud) {
+				const auto bottomValueCloud = *(noiseMapCloud + (y == mapHeight ? mapHeight : y + 1) * mapWidth + x);
+				const auto rightValueCloud = *(noiseMapCloud + y * mapWidth + (x == mapWidth ? mapWidth : x + 1));
+
+				if (y < limitYCloud) actualValue = cloudValue;
+				else if(topValue == cloudValue
+					|| leftValue == cloudValue
+					|| (bottomValueCloud > 0.5 && bottomValueCloud <= spawnRateCloud) 
+					|| (rightValueCloud > 0.5 && rightValueCloud <= spawnRateCloud))
+				actualValue = cloudValue;
+			}
 
 			// Update value of memory block
 			*(noiseMapFinal + y * mapWidth + x) = actualValue;
