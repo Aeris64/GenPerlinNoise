@@ -31,11 +31,11 @@ void MapGenerator::GenerateMap()
 	noise.SetOctaves(4);
 	noise.SetPersistance(1.f);
 	noise.SetLacunarity(3000.f);
-	auto* noiseMapCave = noise.GenerateNoise();
-	const int limitYCaveMin = mapHeight * 0.7F;
-	const int limitYCaveMax = mapHeight * 1.F - 1;
-	const auto spawnRateCave = 0.4F;
-	const auto caveValue = 0.25F;
+	auto* noiseMapStone = noise.GenerateNoise();
+	const int limitYStoneMin = mapHeight * 0.7F;
+	const int limitYStoneMax = mapHeight * 1.F - 1;
+	const auto spawnRateStone = 0.4F;
+	const auto stoneValue = 0.25F;
 
 	noise.SetHeight(mapHeight);
 	/*noise.SetScale(500);
@@ -48,24 +48,34 @@ void MapGenerator::GenerateMap()
 	const auto spawnRateCloud = 0.3F;
 	const auto cloudValue = 0.75F;
 
+	noise.SetHeight(1);
+	noise.SetScale(noiseScale);
+	noise.SetOctaves(octaves);
+	noise.SetPersistance(persistance);
+	noise.SetLacunarity(lacunarity);
+	auto* noiseMapSnow = noise.GenerateNoise();
+	const int limitYSnowMin = mapHeight * 0.25F;
+	const int limitYSnowMax = mapHeight * 0.55F;
+	const auto spawnRateSnow = 0.3F;
+	const auto snowValue = 0.5F;
+
 	// Traverse the 2D array
 	for (auto x = 0; x < mapWidth; x++)
 	{
-		const float yCalcMax = mapHeight * (*(noiseMapFloor + 0 * mapWidth + x));
+		const auto yCalcMax = mapHeight * (*(noiseMapFloor + 0 * mapWidth + x));
+		const auto yCalcMaxSnow = limitYSnowMin + ((limitYSnowMax - limitYSnowMin) * (*(noiseMapSnow + 0 * mapWidth + x)));
 
 		for (auto y = 0; y < mapHeight; y++)
 		{
 			auto actualValue = (y > yCalcMax ? floorValue : skyValue);
 
-			const auto topValue = *(noiseMapFinal + (y == 0 ? 0 : y - 1) * mapWidth + x);
-			const auto leftValue = *(noiseMapFinal + y * mapWidth + (x == 0 ? 0 : x - 1));
-
 			const auto actualCloudValue = *(noiseMapCloud + y * mapWidth + x);
-			const auto actualCaveValue = *(noiseMapCave + y * mapWidth + x);
+			const auto actualStoneValue = *(noiseMapStone + y * mapWidth + x);
 
 			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
-			if (actualValue < 0.5 && actualCaveValue <= spawnRateCave) actualValue = caveValue;
-			if (actualValue > 0.5 && actualCloudValue <= spawnRateCloud) actualValue = cloudValue;
+			if (actualValue == floorValue && y < yCalcMaxSnow) actualValue = snowValue;
+			if (actualValue == floorValue && actualStoneValue <= spawnRateStone) actualValue = stoneValue;
+			if (actualValue == skyValue && actualCloudValue <= spawnRateCloud) actualValue = cloudValue;
 
 			// Update value of memory block
 			*(noiseMapFinal + y * mapWidth + x) = actualValue;
@@ -75,12 +85,12 @@ void MapGenerator::GenerateMap()
 	PixelCheck pixelSystem(noiseMapFinal, cloudValue, limitYCloudMin, limitYCloudMax, mapHeight, mapWidth, skyValue);
 	pixelSystem.GenerateCheck();
 
-	pixelSystem.SetParams(caveValue, limitYCaveMin, limitYCaveMax, floorValue);
+	pixelSystem.SetParams(stoneValue, limitYStoneMin, limitYStoneMax, floorValue);
 	pixelSystem.GenerateCheck();
 
 	// TEMP
 	//devLimitCheck(noiseMapFinal, limitYCloudMin, limitYCloudMax, caveValue, 5, mapWidth);
-	devLimitCheck(noiseMapFinal, limitYCaveMin, limitYCaveMax, cloudValue, 5, mapWidth);
+	//devLimitCheck(noiseMapFinal, limitYCaveMin, limitYCaveMax, cloudValue, 5, mapWidth);
 
 	auto* pixels = new sf::Uint8[mapWidth * mapHeight * 4];
 
