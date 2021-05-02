@@ -10,11 +10,12 @@ MapGenerator::MapGenerator(const int mapWidth, const int mapHeight, const float 
 {
 	sprite = nullptr;
 	texture = nullptr;
+
+	noiseMapFinal = new float[mapWidth * mapHeight];
 }
 
 void MapGenerator::GenerateMap()
 {
-	auto* noiseMapFinal = new float[mapWidth * mapHeight];
 	for (auto y = 0; y < mapHeight; y++) for (auto x = 0; x < mapWidth; x++) *(noiseMapFinal + y * mapWidth + x) = -1.f;
 
 	CustomNoise noise(mapWidth, 1, noiseScale, octaves, persistance, lacunarity);	
@@ -31,7 +32,7 @@ void MapGenerator::GenerateMap()
 	noise.SetScale(500);
 	noise.SetOctaves(5);
 	auto* noiseMapCloud = noise.GenerateNoise();
-	const auto limitYCloud = mapHeight * 0.1F;
+	const int limitYCloud = mapHeight * 0.1F;
 	const auto spawnRateCloud = 0.3F;
 	const auto cloudValue = 0.75F;
 
@@ -51,20 +52,21 @@ void MapGenerator::GenerateMap()
 
 			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
 			if (actualValue < 0.5) actualValue = ((*(noiseMapCave + y * mapWidth + x) <= 0.4F) && (y > mapWidth * 0.50) ? 0.25F : 0.F);
-			if (actualValue > 0.5 && actualCloudValue <= spawnRateCloud) {
-				const auto bottomValueCloud = *(noiseMapCloud + (y == mapHeight ? mapHeight : y + 1) * mapWidth + x);
-				const auto rightValueCloud = *(noiseMapCloud + y * mapWidth + (x == mapWidth ? mapWidth : x + 1));
-
-				if (y < limitYCloud) actualValue = cloudValue;
-				else if(topValue == cloudValue
-					|| leftValue == cloudValue
-					|| (bottomValueCloud > 0.5 && bottomValueCloud <= spawnRateCloud) 
-					|| (rightValueCloud > 0.5 && rightValueCloud <= spawnRateCloud))
-				actualValue = cloudValue;
-			}
+			if (actualValue > 0.5 && actualCloudValue <= spawnRateCloud) actualValue = cloudValue;
 
 			// Update value of memory block
 			*(noiseMapFinal + y * mapWidth + x) = actualValue;
+		}
+	}
+
+	PixelCheck(cloudValue, limitYCloud);
+
+	// TEMP
+	for (auto y = 0; y < 5; y++)
+	{
+		for (auto x = 0; x < mapWidth; x++)
+		{
+			*(noiseMapFinal + (limitYCloud + y) * mapWidth + x) = 0.25F;
 		}
 	}
 
@@ -97,3 +99,110 @@ void MapGenerator::GenerateMap()
 
 	sprite = new sf::Sprite(*texture);
 }
+
+void MapGenerator::PixelCheck(const float valueCheck, const int limitY)
+{
+	for (auto y = limitY + 1; y < mapHeight; y++)
+	{
+		for (auto x = 0; x < mapWidth; x++)
+		{
+			const auto actualValue = *(noiseMapFinal + y * mapWidth + x);
+
+			if (actualValue == valueCheck)
+			{
+				const auto r = PixelAllCheck(x, y, valueCheck, limitY);
+				if (!r) *(noiseMapFinal + y * mapWidth + x) = 1.F;
+			}
+		}
+	}
+}
+
+bool MapGenerator::PixelAllCheck(const int x, const int y, const float valueCheck, const int limitY)
+{
+	auto res = false;
+
+	if (PixelTopCheck(x, y, valueCheck, limitY)) res = true;
+	else if (PixelLeftCheck(x, y, valueCheck, limitY)) res = true;
+	else if (PixelRightCheck(x, y, valueCheck, limitY)) res = true;
+	else if (PixelBottomCheck(x, y, valueCheck, limitY)) res = true;
+
+	return res;
+}
+
+bool MapGenerator::PixelTopCheck(int x, int y, const float valueCheck, const int limitY)
+{
+	auto res = true;
+	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
+	while (actualValue == valueCheck && y > limitY)
+	{
+		y--;
+		actualValue = *(noiseMapFinal + y * mapWidth + x);
+	}
+
+	if (actualValue != valueCheck) res = false;
+
+	return res;
+}
+
+bool MapGenerator::PixelLeftCheck(int x, int y, const float valueCheck, const int limitY)
+{
+	auto res = false;
+	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
+	do {
+		if (actualValue == valueCheck && PixelTopCheck(x, y, valueCheck, limitY)) res = true;
+		actualValue = *(noiseMapFinal + y * mapWidth + x);
+
+		x--;
+	} while (actualValue == valueCheck && x >= (0 - 1) && (!res));
+
+	return res;
+}
+
+bool MapGenerator::PixelRightCheck(int x, int y, const float valueCheck, const int limitY)
+{
+	auto res = false;
+	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
+	do {
+		if (actualValue == valueCheck && PixelTopCheck(x, y, valueCheck, limitY)) res = true;
+		actualValue = *(noiseMapFinal + y * mapWidth + x);
+
+		x++;
+	} while (actualValue == valueCheck && x <= (mapWidth + 1) && (!res));
+
+	return res;
+}
+
+bool MapGenerator::PixelBottomCheck(int x, int y, const float valueCheck, const int limitY)
+{
+	auto res = false;
+	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
+	do {
+		if (actualValue == valueCheck)
+		{
+			if(PixelLeftCheck(x, y, valueCheck, limitY)) res = true;
+			else if (PixelRightCheck(x, y, valueCheck, limitY)) res = true;
+		}
+		actualValue = *(noiseMapFinal + y * mapWidth + x);
+
+		y++;
+	} while (actualValue == valueCheck && y <= (mapHeight + 1) && (!res));
+
+	return res;
+}
+
+/*bool MapGenerator::PixelBottomCheck(int x, int y, const float valueCheck, const int limitY)
+{
+	auto res = false;
+	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
+	if (actualValue == valueCheck && (PixelLeftCheck(x, y, valueCheck, limitY) || PixelRightCheck(x, y, valueCheck, limitY))) res = true;
+
+	while (actualValue == valueCheck && y < mapHeight && (!res))
+	{
+		y++;
+		actualValue = *(noiseMapFinal + y * mapWidth + x);
+
+		if (actualValue == valueCheck && (PixelLeftCheck(x, y, valueCheck, limitY) || PixelRightCheck(x, y, valueCheck, limitY))) res = true;
+	}
+
+	return res;
+}*/
