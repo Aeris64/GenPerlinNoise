@@ -144,6 +144,7 @@
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\MapDisplay.cpp" />
     <ClCompile Include="src\MapGenerator.cpp" />
+    <ClCompile Include="src\PixelCheck.cpp" />
     <ClCompile Include="src\SimplexNoise.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +152,7 @@
     <ClInclude Include="include\MapDisplay.h" />
     <ClInclude Include="include\MapGenerator.h" />
     <ClInclude Include="include\CustomNoise.h" />
+    <ClInclude Include="include\PixelCheck.h" />
     <ClInclude Include="include\SimplexNoise.h" />
     <ClInclude Include="include\Singleton.h" />
   </ItemGroup>

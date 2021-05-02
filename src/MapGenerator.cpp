@@ -21,18 +21,30 @@ void MapGenerator::GenerateMap()
 	CustomNoise noise(mapWidth, 1, noiseScale, octaves, persistance, lacunarity);	
 	auto* noiseMapFloor = noise.GenerateNoise();
 
+	const auto skyValue = 1.F;
+	const auto floorValue = 0.F;
+
 	noise.SetHeight(mapHeight);
-	noise.SetScale(150);
+	/*noise.SetScale(150);
+	noise.SetOctaves(4);*/
+	noise.SetScale(75);
 	noise.SetOctaves(4);
 	noise.SetPersistance(1.f);
 	noise.SetLacunarity(3000.f);
 	auto* noiseMapCave = noise.GenerateNoise();
+	const int limitYCaveMin = mapHeight * 0.7F;
+	const int limitYCaveMax = mapHeight * 1.F - 1;
+	const auto spawnRateCave = 0.4F;
+	const auto caveValue = 0.25F;
 
 	noise.SetHeight(mapHeight);
-	noise.SetScale(500);
-	noise.SetOctaves(5);
+	/*noise.SetScale(500);
+	noise.SetOctaves(5);*/
+	noise.SetScale(200);
+	noise.SetOctaves(1);
 	auto* noiseMapCloud = noise.GenerateNoise();
-	const int limitYCloud = mapHeight * 0.1F;
+	const int limitYCloudMin = mapHeight * 0.;
+	const int limitYCloudMax = mapHeight * 0.1F;
 	const auto spawnRateCloud = 0.3F;
 	const auto cloudValue = 0.75F;
 
@@ -43,15 +55,16 @@ void MapGenerator::GenerateMap()
 
 		for (auto y = 0; y < mapHeight; y++)
 		{
-			auto actualValue = (y > yCalcMax ? 0.F : 1.F);
+			auto actualValue = (y > yCalcMax ? floorValue : skyValue);
 
 			const auto topValue = *(noiseMapFinal + (y == 0 ? 0 : y - 1) * mapWidth + x);
 			const auto leftValue = *(noiseMapFinal + y * mapWidth + (x == 0 ? 0 : x - 1));
 
 			const auto actualCloudValue = *(noiseMapCloud + y * mapWidth + x);
+			const auto actualCaveValue = *(noiseMapCave + y * mapWidth + x);
 
 			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
-			if (actualValue < 0.5) actualValue = ((*(noiseMapCave + y * mapWidth + x) <= 0.4F) && (y > mapWidth * 0.50) ? 0.25F : 0.F);
+			if (actualValue < 0.5 && actualCaveValue <= spawnRateCave) actualValue = caveValue;
 			if (actualValue > 0.5 && actualCloudValue <= spawnRateCloud) actualValue = cloudValue;
 
 			// Update value of memory block
@@ -59,16 +72,15 @@ void MapGenerator::GenerateMap()
 		}
 	}
 
-	PixelCheck(cloudValue, limitYCloud);
+	PixelCheck pixelSystem(noiseMapFinal, cloudValue, limitYCloudMin, limitYCloudMax, mapHeight, mapWidth, skyValue);
+	pixelSystem.GenerateCheck();
+
+	pixelSystem.SetParams(caveValue, limitYCaveMin, limitYCaveMax, floorValue);
+	pixelSystem.GenerateCheck();
 
 	// TEMP
-	for (auto y = 0; y < 5; y++)
-	{
-		for (auto x = 0; x < mapWidth; x++)
-		{
-			*(noiseMapFinal + (limitYCloud + y) * mapWidth + x) = 0.25F;
-		}
-	}
+	//devLimitCheck(noiseMapFinal, limitYCloudMin, limitYCloudMax, caveValue, 5, mapWidth);
+	devLimitCheck(noiseMapFinal, limitYCaveMin, limitYCaveMax, cloudValue, 5, mapWidth);
 
 	auto* pixels = new sf::Uint8[mapWidth * mapHeight * 4];
 
@@ -100,96 +112,6 @@ void MapGenerator::GenerateMap()
 	sprite = new sf::Sprite(*texture);
 }
 
-void MapGenerator::PixelCheck(const float valueCheck, const int limitY)
-{
-	for (auto y = limitY + 1; y < mapHeight; y++)
-	{
-		for (auto x = 0; x < mapWidth; x++)
-		{
-			const auto actualValue = *(noiseMapFinal + y * mapWidth + x);
-
-			if (actualValue == valueCheck)
-			{
-				const auto r = PixelAllCheck(x, y, valueCheck, limitY);
-				if (!r) *(noiseMapFinal + y * mapWidth + x) = 1.F;
-			}
-		}
-	}
-}
-
-bool MapGenerator::PixelAllCheck(const int x, const int y, const float valueCheck, const int limitY)
-{
-	auto res = false;
-
-	if (PixelTopCheck(x, y, valueCheck, limitY)) res = true;
-	else if (PixelLeftCheck(x, y, valueCheck, limitY)) res = true;
-	else if (PixelRightCheck(x, y, valueCheck, limitY)) res = true;
-	else if (PixelBottomCheck(x, y, valueCheck, limitY)) res = true;
-
-	return res;
-}
-
-bool MapGenerator::PixelTopCheck(int x, int y, const float valueCheck, const int limitY)
-{
-	auto res = true;
-	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
-	while (actualValue == valueCheck && y > limitY)
-	{
-		y--;
-		actualValue = *(noiseMapFinal + y * mapWidth + x);
-	}
-
-	if (actualValue != valueCheck) res = false;
-
-	return res;
-}
-
-bool MapGenerator::PixelLeftCheck(int x, int y, const float valueCheck, const int limitY)
-{
-	auto res = false;
-	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
-	do {
-		if (actualValue == valueCheck && PixelTopCheck(x, y, valueCheck, limitY)) res = true;
-		actualValue = *(noiseMapFinal + y * mapWidth + x);
-
-		x--;
-	} while (actualValue == valueCheck && x >= (0 - 1) && (!res));
-
-	return res;
-}
-
-bool MapGenerator::PixelRightCheck(int x, int y, const float valueCheck, const int limitY)
-{
-	auto res = false;
-	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
-	do {
-		if (actualValue == valueCheck && PixelTopCheck(x, y, valueCheck, limitY)) res = true;
-		actualValue = *(noiseMapFinal + y * mapWidth + x);
-
-		x++;
-	} while (actualValue == valueCheck && x <= (mapWidth + 1) && (!res));
-
-	return res;
-}
-
-bool MapGenerator::PixelBottomCheck(int x, int y, const float valueCheck, const int limitY)
-{
-	auto res = false;
-	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
-	do {
-		if (actualValue == valueCheck)
-		{
-			if(PixelLeftCheck(x, y, valueCheck, limitY)) res = true;
-			else if (PixelRightCheck(x, y, valueCheck, limitY)) res = true;
-		}
-		actualValue = *(noiseMapFinal + y * mapWidth + x);
-
-		y++;
-	} while (actualValue == valueCheck && y <= (mapHeight + 1) && (!res));
-
-	return res;
-}
-
 /*bool MapGenerator::PixelBottomCheck(int x, int y, const float valueCheck, const int limitY)
 {
 	auto res = false;
@@ -206,3 +128,21 @@ bool MapGenerator::PixelBottomCheck(int x, int y, const float valueCheck, const 
 
 	return res;
 }*/
+
+void MapGenerator::devLimitCheck(float* map, const int limitYMin, const int limitYMax, const float value, const int nb, const int mapWidth)
+{
+	for (auto y = 0; y < nb; y++)
+	{
+		for (auto x = 0; x < mapWidth; x++)
+		{
+			*(map + (limitYMax - y) * mapWidth + x) = value;
+		}
+	}
+	for (auto y = 0; y < nb; y++)
+	{
+		for (auto x = 0; x < mapWidth; x++)
+		{
+			*(map + (limitYMin + y) * mapWidth + x) = value;
+		}
+	}
+}

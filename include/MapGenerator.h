@@ -3,6 +3,7 @@
 
 #include "CustomNoise.h"
 #include "MapDisplay.h"
+#include "PixelCheck.h"
 
 class MapGenerator
 {
@@ -25,13 +26,7 @@ public:
 	void GenerateMap();
 
 private:
-	void PixelCheck(const float valueCheck, const int limitY);
-
-	bool PixelAllCheck(const int x, const int y, const float valueCheck, const int limitY);
-	bool PixelTopCheck(int x, int y, const float valueCheck, const int limitY);
-	bool PixelLeftCheck(int x, int y, const float valueCheck, const int limitY);
-	bool PixelRightCheck(int x, int y, const float valueCheck, const int limitY);
-	bool PixelBottomCheck(int x, int y, const float valueCheck, const int limitY);
+	void devLimitCheck(float* map, const int limitYMin, const int limitYMax, const float value, const int nb, const int mapWidth);
 
 	//void OnDraw(std::unique_ptr<sf::RenderWindow> m_pWindow)
 	//{
