@@ -13,6 +13,7 @@ public:
 	const int mapWidth;
 	const int mapHeight;
 	const float noiseScale;
+	const int seed;
 
 	const int octaves;
 	const float persistance;
@@ -21,7 +22,7 @@ public:
 	sf::Sprite* sprite;
 	sf::Texture* texture;
 
-	MapGenerator(const int mapWidth, const int mapHeight, const float noiseScale, const int octaves, const float persistance, const float lacunarity);
+	MapGenerator(const int mapWidth, const int mapHeight, const float noiseScale, const int octaves, const float persistance, const float lacunarity, const int seed);
 
 	void GenerateMap();
 

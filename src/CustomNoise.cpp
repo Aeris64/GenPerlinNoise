@@ -1,12 +1,13 @@
 #include "../include/CustomNoise.h"
 
-CustomNoise::CustomNoise(const int mapWidth, const int mapHeight, float scale, const int octaves, const float persistance, const float lacunarity) :
+CustomNoise::CustomNoise(const int mapWidth, const int mapHeight, float scale, const int octaves, const float persistance, const float lacunarity, const int seed) :
 	mapWidth((mapWidth < 1 ? 1 : mapWidth)),
 	mapHeight((mapHeight < 1 ? 1 : mapHeight)),
 	scale((scale < 0 ? 0.0009f : scale)),
 	octaves((octaves < 0 ? 0 : octaves)),
 	persistance((persistance < 0 ? 0 : (persistance > 1 ? 1 : persistance))),
 	lacunarity((lacunarity < 1 ? 1 : lacunarity)),
+	seed(seed),
 	noises(nullptr)
 {}
 
@@ -14,19 +15,19 @@ float* CustomNoise::GenerateNoise()
 {
 	auto* noiseMap = new float[mapWidth * mapHeight];
 
-	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distribution(1, 500);
-	int dice_roll = distribution(generator);
+	//std::default_random_engine generator;
+	//std::uniform_int_distribution<int> distribution(1, 500);
+	//int dice_roll = distribution(generator);
 
-	std::vector<sf::Vector2f> octaveOffsets(octaves);
-	// auto* octaveOffsets = new sf::Vector2f();
-	for (auto i = 0; i < octaves; i++)
-	{
-		const auto offSetX = distribution(generator);
-		const auto offSetY = distribution(generator);
+	//std::vector<sf::Vector2f> octaveOffsets(octaves);
+	//// auto* octaveOffsets = new sf::Vector2f();
+	//for (auto i = 0; i < octaves; i++)
+	//{
+	//	const auto offSetX = distribution(generator);
+	//	const auto offSetY = distribution(generator);
 
-		octaveOffsets[i] = sf::Vector2f(offSetX, offSetY);
-	}
+	//	octaveOffsets[i] = sf::Vector2f(offSetX, offSetY);
+	//}
 
 	float maxNoiseHeight = -INFINITY;
 	float minNoiseHeight = INFINITY;
@@ -34,8 +35,11 @@ float* CustomNoise::GenerateNoise()
 	const float halfWidth = mapWidth / 2;
 	const float halfHeight = mapHeight / 2;
 
-	SimplexNoise::SimplexNoise(1.F, 1.F, lacunarity, persistance);
 	SimplexNoise simpleX;
+	simpleX.mLacunarity = lacunarity;
+	simpleX.mPersistence = persistance;
+	simpleX.mSeed = seed;
+
 	for (auto y = 0; y < mapHeight; y++)
 	{
 		const auto sampleY = y / scale;
@@ -118,6 +122,11 @@ void CustomNoise::SetScale(const float newScale)
 void CustomNoise::SetOctaves(const int newOctaves)
 {
 	octaves = (newOctaves < 0 ? 0 : newOctaves);
+}
+
+void CustomNoise::SetSeed(const int newSeed)
+{
+	seed = newSeed;
 }
 
 void CustomNoise::SetPersistance(const float newPersistance)

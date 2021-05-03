@@ -11,10 +11,11 @@ const sf::Time Game::g_refreshTime = sf::seconds(1.f / 60.f);
 static const auto g_videoMode = sf::VideoMode(image_width, image_height);
 static const std::string g_windowTitle = "SFML M1";
 
-static const float scale = 300;
+static const float scale = 400;
 static const int octaves = 7;
 static const float persistance = 0.5F;
-static const float lacunarity = 1.F;
+static const float lacunarity = 2.F;
+static const int seed = 300;
 
 Game::~Game()
 {
@@ -28,7 +29,7 @@ void Game::Exec()
 
 	static const auto refreshTime = g_refreshTime.asMilliseconds();
 
-	MapGenerator mg(image_width, image_height, scale, octaves, persistance, lacunarity);
+	MapGenerator mg(image_width, image_height, scale, octaves, persistance, lacunarity, seed);
 	mg.GenerateMap();
 
 	while (m_pWindow->isOpen())

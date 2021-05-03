@@ -27,6 +27,7 @@
 #include "../include/SimplexNoise.h"
 
 #include <cstdint>  // int32_t/uint8_t
+#include <iostream>
 
  /**
   * Computes the largest integer value not greater than the float one
@@ -450,7 +451,7 @@ float SimplexNoise::fractal(size_t octaves, float x, float y) const {
     float amplitude = mAmplitude;
 
     for (size_t i = 0; i < octaves; i++) {
-        output += (amplitude * noise(x * frequency, y * frequency));
+        output += (amplitude * noise(x * frequency + mSeed, y * frequency + mSeed));
         denom += amplitude;
 
         frequency *= mLacunarity;
