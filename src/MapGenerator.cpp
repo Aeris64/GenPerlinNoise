@@ -1,5 +1,7 @@
 #include "../include/MapGenerator.h"
 
+static const int answerLife = 42;
+
 MapGenerator::MapGenerator(const int mapWidth, const int mapHeight, const float noiseScale, const int octaves, const float persistance, const float lacunarity, const int seed) :
 	mapWidth((mapWidth < 1 ? 1 : mapWidth)),
 	mapHeight((mapHeight < 1 ? 1 : mapHeight)),
@@ -27,33 +29,15 @@ void MapGenerator::GenerateMap()
 	const auto skyValue = 1.F;
 	const auto floorValue = 0.F;
 
-	noise.SetHeight(mapHeight);
-	/*noise.SetScale(150);
-	noise.SetOctaves(4);*/
-	noise.SetScale(75);
-	noise.SetOctaves(4);
-	noise.SetPersistance(0.5f);
-	noise.SetLacunarity(20.f);
-	auto* noiseMapStone = noise.GenerateNoise();
-	const int limitYStoneMin = mapHeight * 0.7F;
-	const int limitYStoneMax = mapHeight * 1.F - 1;
-	const auto spawnRateStone = 0.4F;
-	const auto stoneValue = 0.25F;
+	Plan stonePlan(mapWidth, mapHeight, 100, seed / answerLife, 7, 0.15F, 20.F);
+	stonePlan.SetSpawnPreference(mapHeight * 0.7F, mapHeight * 1.F, 0.4F, 0.25F);
+	stonePlan.SetGenerateMap(noise);
 
-	noise.SetHeight(mapHeight);
-	/*noise.SetScale(500);
-	noise.SetOctaves(5);*/
-	noise.SetScale(200);
-	noise.SetOctaves(7);
-	noise.SetPersistance(0.55f);
-	noise.SetLacunarity(2.f);
-	noise.SetSeed(seed * 300);
-	auto* noiseMapCloud = noise.GenerateNoise();
-	const int limitYCloudMin = mapHeight * 0.F;
-	const int limitYCloudMax = mapHeight * 0.1F;
-	const auto spawnRateCloud = 0.35F;
-	const auto cloudValue = 0.75F;
+	Plan cloudPlan(mapWidth, mapHeight, 200, seed * answerLife, 4, 0.55F, 3.F);
+	cloudPlan.SetSpawnPreference(mapHeight * 0.F, mapHeight * 0.1F, 0.4F, 0.75F);
+	cloudPlan.SetGenerateMap(noise);
 
+	// Plan snowPlan(mapWidth; 1, noiseScale, seed * seed, octaves, persistance, lacunarity)
 	noise.SetHeight(1);
 	noise.SetScale(noiseScale);
 	noise.SetOctaves(octaves);
@@ -77,23 +61,24 @@ void MapGenerator::GenerateMap()
 		{
 			auto actualValue = (y > yCalcMax ? floorValue : skyValue);
 
-			const auto actualCloudValue = *(noiseMapCloud + y * mapWidth + x);
-			const auto actualStoneValue = *(noiseMapStone + y * mapWidth + x);
+			const auto actualStoneValue = *(stonePlan.map + y * mapWidth + x);
+			const auto actualCloudValue = *(cloudPlan.map + y * mapWidth + x);
 
 			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
 			if (actualValue == floorValue && y < yCalcMaxSnow) actualValue = snowValue;
-			if (actualValue == floorValue && actualStoneValue <= spawnRateStone) actualValue = stoneValue;
-			if (actualValue == skyValue && actualCloudValue <= spawnRateCloud) actualValue = cloudValue;
+			if (actualValue == floorValue && actualStoneValue <= stonePlan.spawnRate) actualValue = stonePlan.value;
+			if (actualValue == skyValue && actualCloudValue <= cloudPlan.spawnRate) actualValue = cloudPlan.value;
 
 			// Update value of memory block
 			*(noiseMapFinal + y * mapWidth + x) = actualValue;
 		}
 	}
 
-	PixelCheck pixelSystem(noiseMapFinal, cloudValue, limitYCloudMin, limitYCloudMax, mapHeight, mapWidth, skyValue);
+	PixelCheck pixelSystem(noiseMapFinal, mapHeight, mapWidth);
+	pixelSystem.SetParams(stonePlan);
 	pixelSystem.GenerateCheck();
 
-	pixelSystem.SetParams(stoneValue, limitYStoneMin, limitYStoneMax, floorValue);
+	pixelSystem.SetParams(cloudPlan);
 	pixelSystem.GenerateCheck();
 
 	// TEMP

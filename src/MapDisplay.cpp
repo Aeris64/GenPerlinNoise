@@ -14,7 +14,7 @@ sf::Uint8* MapDisplay::DrawNoiseMap(float* noiseMap, const int width, const int 
 			// *(colourMap + y * width + x) = MapDisplay::LerpRGB(sf::Color::Black, sf::Color::White, value);
 			// MapDisplay::WriteColor(pixels, x, y, width, MapDisplay::LerpRGB(sf::Color::Black, sf::Color::White, value));
 			sf::Color myColor = sf::Color(128, 70, 27, 255);
-			if (value == 0.25F) myColor = sf::Color(136, 139, 141, 255);
+			if (value == 0.25F) myColor = sf::Color(99, 102, 106, 255);
 			if (value == 0.5F) myColor = sf::Color(255, 250, 250, 255);
 			if (value == 0.75F) myColor = sf::Color(129, 165, 186, 255);
 			if (value == 1.F) myColor = sf::Color(48, 128, 232, 255);

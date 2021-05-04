@@ -1,13 +1,13 @@
 #include "../include/PixelCheck.h"
 
-PixelCheck::PixelCheck(float* map, const float valueCheck, const int limitYMin, const int limitYMax, const int mapHeight, const int mapWidth, const float defaultValue) :
+PixelCheck::PixelCheck(float* map, const int mapHeight, const int mapWidth) :
 	map(map),
-	valueCheck(valueCheck),
-	limitYMin(limitYMin),
-	limitYMax(limitYMax),
+	valueCheck(0.F),
+	limitYMin(0),
+	limitYMax(0),
 	mapHeight(mapHeight),
 	mapWidth(mapWidth),
-	defaultValue(defaultValue)
+	defaultValue(0.F)
 {
 	mapBool = new bool[mapWidth * mapHeight];
 }
@@ -37,12 +37,12 @@ float* PixelCheck::GenerateCheck()
 	return map;
 }
 
-void PixelCheck::SetParams(const float newValueCheck, const int newLimitYMin, const int newLimitYMax, const float newDefaultValue)
+void PixelCheck::SetParams(Plan actualPlan)
 {
-	valueCheck = newValueCheck;
-	limitYMin = newLimitYMin;
-	limitYMax = newLimitYMax;
-	defaultValue = newDefaultValue;
+	valueCheck = actualPlan.value;
+	limitYMin = actualPlan.limitYMin;
+	limitYMax = actualPlan.limitYMax;
+	defaultValue = (valueCheck < 0.5 ? 0 : 1);
 }
 
 bool PixelCheck::PixelAllCheck(const int x, const int y)

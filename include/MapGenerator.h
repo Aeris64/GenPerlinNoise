@@ -4,6 +4,7 @@
 #include "CustomNoise.h"
 #include "MapDisplay.h"
 #include "PixelCheck.h"
+#include "Plan.h"
 
 class MapGenerator
 {

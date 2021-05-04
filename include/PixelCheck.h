@@ -2,6 +2,7 @@
 #define PIXELCHECK_H
 
 #include <iostream>
+#include "Plan.h"
 
 class PixelCheck
 {
@@ -17,9 +18,9 @@ public:
 
 	float defaultValue;
 
-	PixelCheck(float* map, const float valueCheck, const int limitYMin, const int limitYMax, const int mapHeight, const int mapWidth, const float defaultValue);
+	PixelCheck(float* map, const int mapHeight, const int mapWidth);
 	float* GenerateCheck();
-	void SetParams(const float valueCheck, const int limitYMin, const int limitYMax, const float defaultValue);
+	void SetParams(Plan actualPlan);
 
 private:
 	bool* mapBool;
