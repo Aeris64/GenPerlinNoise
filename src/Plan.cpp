@@ -16,10 +16,10 @@ Plan::Plan(const int mapWidth, const int mapHeight, const float scale, const int
 	map = nullptr;
 }
 
-void Plan::SetSpawnPreference(const int newLimitYMin, const int newLimitYMax, const float newSpawnRate, const float newValue)
+void Plan::SetSpawnPreference(const float newLimitYMin, const float newLimitYMax, const float newSpawnRate, const float newValue)
 {
-	limitYMin = (newLimitYMin < 0 ? 0 : (newLimitYMin > mapHeight - 1 ? mapHeight - 1 : newLimitYMin));
-	limitYMax = (newLimitYMax < 0 ? 0 : (newLimitYMax > mapHeight - 1 ? mapHeight - 1 : newLimitYMax));
+	limitYMin = ((newLimitYMin < 0.F ? 0 : (newLimitYMin > 100.F ? 100 : newLimitYMin)) / 100.F) * mapHeight;
+	limitYMax = ((newLimitYMax < 0.F ? 0 : (newLimitYMax > 100.F ? 100 : newLimitYMax)) / 100.F) * mapHeight;
 	spawnRate = ((newSpawnRate < 0 ? 0 : (newSpawnRate > 1 ? 1 : newSpawnRate)));
 	value = ((newValue < 0 ? 0 : (newValue > 1 ? 1 : newValue)));
 }

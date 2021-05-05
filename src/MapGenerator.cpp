@@ -30,42 +30,41 @@ void MapGenerator::GenerateMap()
 	const auto floorValue = 0.F;
 
 	Plan stonePlan(mapWidth, mapHeight, 100, seed / answerLife, 7, 0.15F, 20.F);
-	stonePlan.SetSpawnPreference(mapHeight * 0.7F, mapHeight * 1.F, 0.4F, 0.25F);
+	stonePlan.SetSpawnPreference(70, 100, 0.4F, 0.25F);
 	stonePlan.SetGenerateMap(noise);
 
 	Plan cloudPlan(mapWidth, mapHeight, 200, seed * answerLife, 4, 0.55F, 3.F);
-	cloudPlan.SetSpawnPreference(mapHeight * 0.F, mapHeight * 0.1F, 0.4F, 0.75F);
+	cloudPlan.SetSpawnPreference(0, 10, 0.4F, 0.75F);
 	cloudPlan.SetGenerateMap(noise);
 
-	// Plan snowPlan(mapWidth; 1, noiseScale, seed * seed, octaves, persistance, lacunarity)
-	noise.SetHeight(1);
-	noise.SetScale(noiseScale);
-	noise.SetOctaves(octaves);
-	noise.SetPersistance(persistance);
-	noise.SetLacunarity(lacunarity);
-	noise.SetSeed(seed * seed);
-	auto* noiseMapSnow = noise.GenerateNoise();
+	Plan snowPlan(mapWidth, 1, noiseScale, seed * seed, octaves, persistance, lacunarity);
+	snowPlan.SetSpawnPreference(25, 55, 0.3F, 0.5F);
+	snowPlan.SetGenerateMap(noise);
 	const int limitYSnowMin = mapHeight * 0.25F;
 	const int limitYSnowMax = mapHeight * 0.55F;
-	const auto spawnRateSnow = 0.3F;
-	const auto snowValue = 0.5F;
+
+	Plan dirtPlan(mapWidth, mapHeight, 150, seed * answerLife / seed, 4, 0.15F, 20.F);
+	dirtPlan.SetSpawnPreference(30, 100, 0.50F, 0.35F);
+	dirtPlan.SetGenerateMap(noise);
 
 	// Traverse the 2D array
 	for (auto x = 0; x < mapWidth; x++)
 	{
 		// const auto yCalcMax = mapHeight * (*(noiseMapFloor + 0 * mapWidth + x));
 		const auto yCalcMax = limitYMountMin + ((limitYMountMax - limitYMountMin) * (*(noiseMapFloor + 0 * mapWidth + x)));
-		const auto yCalcMaxSnow = limitYSnowMin + ((limitYSnowMax - limitYSnowMin) * (*(noiseMapSnow + 0 * mapWidth + x)));
+		const auto yCalcMaxSnow = limitYSnowMin + ((limitYSnowMax - limitYSnowMin) * (*(snowPlan.map + 0 * mapWidth + x)));
 
 		for (auto y = 0; y < mapHeight; y++)
 		{
 			auto actualValue = (y > yCalcMax ? floorValue : skyValue);
 
 			const auto actualStoneValue = *(stonePlan.map + y * mapWidth + x);
+			const auto actualDirtValue = *(dirtPlan.map + y * mapWidth + x);
 			const auto actualCloudValue = *(cloudPlan.map + y * mapWidth + x);
 
 			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
-			if (actualValue == floorValue && y < yCalcMaxSnow) actualValue = snowValue;
+			if (actualValue == floorValue && y < yCalcMaxSnow) actualValue = snowPlan.value;
+			if (actualValue == floorValue && actualDirtValue <= dirtPlan.spawnRate) actualValue = dirtPlan.value;
 			if (actualValue == floorValue && actualStoneValue <= stonePlan.spawnRate) actualValue = stonePlan.value;
 			if (actualValue == skyValue && actualCloudValue <= cloudPlan.spawnRate) actualValue = cloudPlan.value;
 

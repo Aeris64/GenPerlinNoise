@@ -1,6 +1,7 @@
 #ifndef MAPGENERATOR_H
 #define MAPGENERATOR_H
 
+#include "nlohmann/json.hpp"
 #include "CustomNoise.h"
 #include "MapDisplay.h"
 #include "PixelCheck.h"

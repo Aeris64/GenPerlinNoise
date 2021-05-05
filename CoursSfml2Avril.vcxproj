@@ -158,6 +158,9 @@
     <ClInclude Include="include\SimplexNoise.h" />
     <ClInclude Include="include\Singleton.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ressources\plans.json" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

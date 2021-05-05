@@ -9,7 +9,7 @@ public:
 	Plan(const int mapWidth, const int mapHeight, const float scale, const int seed, const int octaves, const float persistance, const float lacunarity);
 	~Plan() = default;
 
-	void SetSpawnPreference(const int newLimitYMin, const int newLimitYMax, const float newSpawnRate, const float newValue);
+	void SetSpawnPreference(const float newLimitYMin, const float newLimitYMax, const float newSpawnRate, const float newValue);
 	void SetGenerateMap(CustomNoise newMap);
 
 //private:
