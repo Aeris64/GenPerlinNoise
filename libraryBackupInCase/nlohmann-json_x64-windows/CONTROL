@@ -1,0 +1,7 @@
+Package: nlohmann-json
+Version: 3.9.1
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 296fd137b904712d83e2337b74fa85298cc95e09
+Description: JSON for Modern C++
+Type: Port

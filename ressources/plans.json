@@ -1,0 +1,94 @@
+[
+    {
+        "activate": true,
+        "name": "stone",
+        "size": 2,
+        "scale": 100,
+        "octaves": 7,
+        "persistance": 0.15,
+        "lacunarity": 20,
+        "limitY": {
+            "min": 70,
+            "max": 100
+        },
+        "spawn": {
+            "rate": 0.4,
+            "value": 0.25,
+            "validValue": 0
+        },
+        "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        }
+    },
+    {
+        "activate": false,
+        "name": "snow",
+        "size": 1,
+        "scale": 400,
+        "octaves": 7,
+        "persistance": 0.5,
+        "lacunarity": 2,
+        "limitY": {
+            "min": 25,
+            "max": 55
+        },
+        "spawn": {
+            "rate": 0.3,
+            "value": 0.5,
+            "validValue": 0
+        },
+        "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        }
+    },
+    {
+        "activate": true,
+        "name": "cloud",
+        "size": 2,
+        "scale": 200,
+        "octaves": 4,
+        "persistance": 0.55,
+        "lacunarity": 3,
+        "limitY": {
+            "min": 0,
+            "max": 10
+        },
+        "spawn": {
+            "rate": 0.4,
+            "value": 0.75,
+            "validValue": 1
+        },
+        "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        }
+    },
+    {
+        "activate": true,
+        "name": "dirt",
+        "size": 2,
+        "scale": 150,
+        "octaves": 4,
+        "persistance": 0.15,
+        "lacunarity": 20,
+        "limitY": {
+            "min": 30,
+            "max": 100
+        },
+        "spawn": {
+            "rate": 0.5,
+            "value": 0.35,
+            "validValue": 0
+        },
+        "color": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        }
+    }
+]

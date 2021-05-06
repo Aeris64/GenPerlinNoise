@@ -1,4 +1,11 @@
 #include "../include/CustomNoise.h"
+#include "../include/SimplexNoise.h"
+#include "../include/MapDisplay.h"
+
+#include <SFML/System/Vector2.hpp>
+#include <iostream>
+#include <random>
+#include <vector>
 
 CustomNoise::CustomNoise(const int mapWidth, const int mapHeight, float scale, const int octaves, const float persistance, const float lacunarity, const int seed) :
 	mapWidth((mapWidth < 1 ? 1 : mapWidth)),
@@ -31,9 +38,6 @@ float* CustomNoise::GenerateNoise()
 
 	float maxNoiseHeight = -INFINITY;
 	float minNoiseHeight = INFINITY;
-
-	const float halfWidth = mapWidth / 2;
-	const float halfHeight = mapHeight / 2;
 
 	SimplexNoise simpleX;
 	simpleX.mLacunarity = lacunarity;
@@ -79,15 +83,13 @@ float* CustomNoise::GenerateNoise()
 		}
 	}
 
+	// Lerp of the values in relation to the minimum and maximum values
 	for (auto y = 0; y < mapHeight; y++)
 	{
 		for (auto x = 0; x < mapWidth; x++)
 		{
 			*(noiseMap + y * mapWidth + x) = InvLerp(minNoiseHeight, maxNoiseHeight, *(noiseMap + y * mapWidth + x));
-
-			// std::cout << *(noiseMap + y * mapWidth + x) << ", ";
 		}
-		// std::cout << std::endl;
 	}
 
 	noises = noiseMap;

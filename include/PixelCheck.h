@@ -1,7 +1,6 @@
 #ifndef PIXELCHECK_H
 #define PIXELCHECK_H
 
-#include <iostream>
 #include "Plan.h"
 
 class PixelCheck

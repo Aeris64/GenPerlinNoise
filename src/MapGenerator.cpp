@@ -1,6 +1,21 @@
 #include "../include/MapGenerator.h"
 
+#include "../include/CustomNoise.h"
+#include "../include/MapDisplay.h"
+#include "../include/PixelCheck.h"
+#include "../include/Plan.h"
+
+#include "nlohmann/json.hpp"
+#include <./SFML/Graphics.hpp>
+#include <fstream>
+#include <iostream>
+
+
 static const int answerLife = 42;
+static const auto plansFile = "ressources/plans.json";
+
+static const auto skyValue = 1.F;
+static const auto floorValue = 0.F;
 
 MapGenerator::MapGenerator(const int mapWidth, const int mapHeight, const float noiseScale, const int octaves, const float persistance, const float lacunarity, const int seed) :
 	mapWidth((mapWidth < 1 ? 1 : mapWidth)),
@@ -19,91 +34,109 @@ MapGenerator::MapGenerator(const int mapWidth, const int mapHeight, const float 
 
 void MapGenerator::GenerateMap()
 {
+	// Fill array of invalid value
 	for (auto y = 0; y < mapHeight; y++) for (auto x = 0; x < mapWidth; x++) *(noiseMapFinal + y * mapWidth + x) = -1.f;
 
+	// Create first 1 dimension noise for sky & ground
 	CustomNoise noise(mapWidth, 1, noiseScale, octaves, persistance, lacunarity, seed);
 	auto* noiseMapFloor = noise.GenerateNoise();
 	const int limitYMountMin = mapHeight * 0.07F;
 	const int limitYMountMax = mapHeight * 0.82F;
 
-	const auto skyValue = 1.F;
-	const auto floorValue = 0.F;
+	// Read a JSON file
+	std::ifstream i(plansFile);
+	nlohmann::json json;
+	i >> json;
 
-	Plan stonePlan(mapWidth, mapHeight, 100, seed / answerLife, 7, 0.15F, 20.F);
-	stonePlan.SetSpawnPreference(70, 100, 0.4F, 0.25F);
-	stonePlan.SetGenerateMap(noise);
+	auto multiplier = seed;
+	// Stock all noise map plan
+	std::vector<Plan> allPlans;
+	for (const auto& td : json)
+	{
+		const auto check = td["activate"];
+		// Check if plan is activate
+		if (!check) continue;
 
-	Plan cloudPlan(mapWidth, mapHeight, 200, seed * answerLife, 4, 0.55F, 3.F);
-	cloudPlan.SetSpawnPreference(0, 10, 0.4F, 0.75F);
-	cloudPlan.SetGenerateMap(noise);
+		// To differentiate in how many dimensions the plane is
+		const int size = td["size"];
+		const int mapWidthPlan = mapWidth;
+		const int mapHeightPlan = (size == 1 ? 1 : mapHeight);
+		const float scalePlan = td["scale"];
+		const int octavesPlan = td["octaves"];
+		const float persistancePlan = td["persistance"];
+		const float lacunarityPlan = td["lacunarity"];
 
+		// Set params for plan
+		Plan actualPlan(mapWidthPlan, mapHeightPlan, scalePlan, multiplier, octavesPlan, persistancePlan, lacunarityPlan);
+
+		const float limitYMinPlan = td["limitY"]["min"];
+		const float limitYMaxPlan = td["limitY"]["max"];
+		const float spawnRatePlan = td["spawn"]["rate"];
+		const float valuePlan = td["spawn"]["value"];
+		const float validValuePlan = td["spawn"]["validValue"];
+
+		// Set params for plan
+		actualPlan.SetSpawnPreference(limitYMinPlan, limitYMaxPlan, spawnRatePlan, valuePlan, validValuePlan);
+
+		// Generate plan in map
+		actualPlan.SetGenerateMap(noise);
+
+		allPlans.push_back(actualPlan);
+
+		multiplier *= answerLife;
+	}
+
+	// One dimension plan - WIP
 	Plan snowPlan(mapWidth, 1, noiseScale, seed * seed, octaves, persistance, lacunarity);
-	snowPlan.SetSpawnPreference(25, 55, 0.3F, 0.5F);
+	snowPlan.SetSpawnPreference(25, 55, 0.3F, 0.5F, floorValue);
 	snowPlan.SetGenerateMap(noise);
 	const int limitYSnowMin = mapHeight * 0.25F;
 	const int limitYSnowMax = mapHeight * 0.55F;
-
-	Plan dirtPlan(mapWidth, mapHeight, 150, seed * answerLife / seed, 4, 0.15F, 20.F);
-	dirtPlan.SetSpawnPreference(30, 100, 0.50F, 0.35F);
-	dirtPlan.SetGenerateMap(noise);
+	//
 
 	// Traverse the 2D array
 	for (auto x = 0; x < mapWidth; x++)
 	{
-		// const auto yCalcMax = mapHeight * (*(noiseMapFloor + 0 * mapWidth + x));
 		const auto yCalcMax = limitYMountMin + ((limitYMountMax - limitYMountMin) * (*(noiseMapFloor + 0 * mapWidth + x)));
+		// One dimension plan - WIP
 		const auto yCalcMaxSnow = limitYSnowMin + ((limitYSnowMax - limitYSnowMin) * (*(snowPlan.map + 0 * mapWidth + x)));
+		//
 
 		for (auto y = 0; y < mapHeight; y++)
 		{
 			auto actualValue = (y > yCalcMax ? floorValue : skyValue);
 
-			const auto actualStoneValue = *(stonePlan.map + y * mapWidth + x);
-			const auto actualDirtValue = *(dirtPlan.map + y * mapWidth + x);
-			const auto actualCloudValue = *(cloudPlan.map + y * mapWidth + x);
-
-			// If(..) then actualValue = (value < freqSpawn && spawn 25% Map (haut ou bas) alors ..)
+			// One dimension plan - WIP
 			if (actualValue == floorValue && y < yCalcMaxSnow) actualValue = snowPlan.value;
-			if (actualValue == floorValue && actualDirtValue <= dirtPlan.spawnRate) actualValue = dirtPlan.value;
-			if (actualValue == floorValue && actualStoneValue <= stonePlan.spawnRate) actualValue = stonePlan.value;
-			if (actualValue == skyValue && actualCloudValue <= cloudPlan.spawnRate) actualValue = cloudPlan.value;
+			//
+
+			// For all plans
+			for (const auto& actualPlan : allPlans)
+			{
+				// Get noise value in plan
+				const auto actualPlanValue = *(actualPlan.map + y * mapWidth + x);
+
+				// If noise is okay, set value
+				if (actualValue == actualPlan.validValue && actualPlanValue <= actualPlan.spawnRate) actualValue = actualPlan.value;
+			}
 
 			// Update value of memory block
 			*(noiseMapFinal + y * mapWidth + x) = actualValue;
 		}
 	}
 
+	// In order not to cut generation abruptly
 	PixelCheck pixelSystem(noiseMapFinal, mapHeight, mapWidth);
-	pixelSystem.SetParams(stonePlan);
-	pixelSystem.GenerateCheck();
-
-	pixelSystem.SetParams(cloudPlan);
-	pixelSystem.GenerateCheck();
-
-	// TEMP
-	//devLimitCheck(noiseMapFinal, limitYMountMin, limitYMountMax, stoneValue, 5, mapWidth);
-	//devLimitCheck(noiseMapFinal, limitYCaveMin, limitYCaveMax, cloudValue, 5, mapWidth);
-
-	auto* pixels = new sf::Uint8[mapWidth * mapHeight * 4];
-
-	MapDisplay::DrawNoiseMap(noiseMapFinal, mapWidth, mapHeight, pixels);
-
-	/*// Traverse the 2D array
-	for (auto y = 0; y < 3; y++)
+	for (const auto& actualPlan : allPlans)
 	{
-		// std::cout << "Y:" << y << std::endl;
+		pixelSystem.SetParams(actualPlan);
+		pixelSystem.GenerateCheck();
+	}
 
-		for (auto x = 0; x < 3; x++)
-		{
-			// std::cout << "X:" << x << std::endl;
-
-			// Print values of the
-			// memory block
-			std::cout << *(noiseMapFinal + y * mapWidth + x) << ", ";
-		}
-		std::cout << std::endl;
-	}*/
-
+	// Set pixels
+	auto* pixels = new sf::Uint8[mapWidth * mapHeight * 4];
+	// Draw pixels color
+	MapDisplay::DrawNoiseMap(noiseMapFinal, mapWidth, mapHeight, pixels);
 	texture = new sf::Texture();
 
 	if (!texture->create(mapWidth, mapHeight))
@@ -114,37 +147,7 @@ void MapGenerator::GenerateMap()
 	sprite = new sf::Sprite(*texture);
 }
 
-/*bool MapGenerator::PixelBottomCheck(int x, int y, const float valueCheck, const int limitY)
+sf::Sprite* MapGenerator::GetSprite()
 {
-	auto res = false;
-	auto actualValue = *(noiseMapFinal + y * mapWidth + x);
-	if (actualValue == valueCheck && (PixelLeftCheck(x, y, valueCheck, limitY) || PixelRightCheck(x, y, valueCheck, limitY))) res = true;
-
-	while (actualValue == valueCheck && y < mapHeight && (!res))
-	{
-		y++;
-		actualValue = *(noiseMapFinal + y * mapWidth + x);
-
-		if (actualValue == valueCheck && (PixelLeftCheck(x, y, valueCheck, limitY) || PixelRightCheck(x, y, valueCheck, limitY))) res = true;
-	}
-
-	return res;
-}*/
-
-void MapGenerator::devLimitCheck(float* map, const int limitYMin, const int limitYMax, const float value, const int nb, const int mapWidth)
-{
-	for (auto y = 0; y < nb; y++)
-	{
-		for (auto x = 0; x < mapWidth; x++)
-		{
-			*(map + (limitYMax - y) * mapWidth + x) = value;
-		}
-	}
-	for (auto y = 0; y < nb; y++)
-	{
-		for (auto x = 0; x < mapWidth; x++)
-		{
-			*(map + (limitYMin + y) * mapWidth + x) = value;
-		}
-	}
+	return sprite;
 }

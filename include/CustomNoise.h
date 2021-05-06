@@ -1,14 +1,6 @@
 #ifndef CUSTOMNOISE_H
 #define CUSTOMNOISE_H
 
-#include <iostream>
-
-#include "SimplexNoise.h"
-#include "MapDisplay.h"
-#include <SFML/System/Vector2.hpp>
-#include <random>
-#include <vector>
-
 class CustomNoise
 {
 public:

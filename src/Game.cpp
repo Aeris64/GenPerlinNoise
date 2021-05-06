@@ -49,8 +49,7 @@ void Game::Exec()
 			lag -= refreshTime;
 		}
 
-		m_pWindow->draw(*mg.sprite);
-		// mg.OnDraw(m_pWindow);
+		m_pWindow->draw(*mg.GetSprite());
 
 		Render();
 	}
